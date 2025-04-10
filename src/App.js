@@ -82,8 +82,20 @@ server.listen(4000, () => {
 function todoById(parent, args, context, info){
     return todosList.find(t => t.id == args.id);
 }
-function userById(parent, args, context, info){
-    return usersList.find(u => u.id == args.id);
+async function userById(parent, args, context, info){
+    try {
+        const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${args.id}`);
+        const {id, name, email, username} = response.data;
+        return {
+            id: id,
+            name: name,
+            email: email,
+            login: username,
+        }
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        return null
+    }
 }
 
 async function getRestUsersList(){
