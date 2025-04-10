@@ -3,22 +3,6 @@ const { createServer } = require('http');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const axios = require('axios');
 
-// Sample data
-const usersList = [
-    { id: 1, name: "Jan Konieczny", email: "jan.konieczny@wonet.pl", login: "jkonieczny" },
-    { id: 2, name: "Anna Wesołowska", email: "anna.w@sad.gov.pl", login: "anna.wesolowska" },
-    { id: 3, name: "Piotr Waleczny", email: "piotr.waleczny@gp.pl", login: "p.waleczny" }
-];
-
-const todosList = [
-    { id: 1, title: "Naprawić samochód", completed: false, user_id: 3 },
-    { id: 2, title: "Posprzątać garaż", completed: true, user_id: 3 },
-    { id: 3, title: "Napisać e-mail", completed: false, user_id: 3 },
-    { id: 4, title: "Odebrać buty", completed: false, user_id: 2 },
-    { id: 5, title: "Wysłać paczkę", completed: true, user_id: 2 },
-    { id: 6, title: "Zamówic kuriera", completed: false, user_id: 3 },
-];
-
 // Define the schema and resolvers
 const typeDefs = /* GraphQL */ `
     type Query {
@@ -47,15 +31,18 @@ const typeDefs = /* GraphQL */ `
 const resolvers = {
     Query: {
         users: async() => await getRestUsersList(),
-        todos: () => todosList,
+        todos: async() => getRestTodosList,
         todo: (parent, args, context, info) => todoById(parent, args, context, info),
         user: (parent, args, context, info) => userById(parent, args, context, info),
     },
     ToDoItem: {
-        user: (parent, args, context, info) => usersList.find(user => user.id === parent.user_id)
+        user: async(parent, args, context, info) => await userById(null, {id: parent.userId}, context, info),
     },
     User: {
-        todos: (parent, args, context, info) => todosList.filter(todo => todo.user_id === parent.id),
+        todos: async (parent, args, context, info) => {
+            const todos = await getRestTodosList();
+            return todos.filter(todo => todo.userId === parent.id);
+        },
     },
 
 };
@@ -79,9 +66,22 @@ server.listen(4000, () => {
     console.log('Server is running on http://localhost:4000');
 });
 
-function todoById(parent, args, context, info){
-    return todosList.find(t => t.id == args.id);
+async function todoById(parent, args, context, info) {
+    try {
+        const response = await axios.get(`https://jsonplaceholder.typicode.com/todos/${args.id}`);
+        const { id, title, completed, userId } = response.data;
+        return {
+            id: id,
+            title: title,
+            completed: completed,
+            userId: userId,
+        };
+    } catch (error) {
+        console.error("Error fetching todo:", error);
+        return null;
+    }
 }
+
 async function userById(parent, args, context, info){
     try {
         const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${args.id}`);
@@ -111,4 +111,19 @@ async function getRestUsersList(){
     } catch (error) {
         throw error
         }
+}
+
+async function getRestTodosList() {
+    try {
+        const response = await axios.get("https://jsonplaceholder.typicode.com/todos");
+        return response.data.map(({ id, title, completed, userId }) => ({
+            id: id,
+            title: title,
+            completed: completed,
+            userId: userId,
+        }));
+    } catch (error) {
+        console.error("Error fetching todos:", error);
+        throw error;
+    }
 }
