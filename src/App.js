@@ -3,6 +3,7 @@ const { createServer } = require('http');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { readFileSync } = require('fs');
 const { parse } = require('graphql');
+const { GraphQLError } = require('graphql');
 const { sequelize, User, ToDoItem } = require('./models');
 
 // Load the schema from src/schema.graphql
@@ -15,6 +16,52 @@ const resolvers = {
         todo: async (parent, { id }) => await ToDoItem.findByPk(id),
         user: async (parent, { id }) => await User.findByPk(id),
     },
+
+    Mutation: {
+        createUser: async (_, { name, email, login }) => {
+            return await User.create({ name, email, login });
+        },
+        updateUser: async (_, { id, ...updates }) => {
+            const user = await User.findByPk(id);
+            if (!user)
+              throw new GraphQLError('User not found', {
+                extensions: { code: 'NOT_FOUND' },
+              });
+            await user.update(updates);
+            return user;
+          },
+        deleteUser: async (_, { id }) => {
+            const user = await User.findByPk(id);
+            if (!user) return false;
+            await user.destroy();
+            return true;
+        },
+    
+        createToDo: async (_, { title, completed, userId }) => {
+            const user = await User.findByPk(userId);
+            if (!user)
+              throw new GraphQLError('User not found', {
+                extensions: { code: 'INVALID_INPUT' },
+              });
+            return await ToDoItem.create({ title, completed, userId });
+        },
+        updateToDo: async (_, { id, ...updates }) => {
+            const todo = await ToDoItem.findByPk(id);
+            if (!todo)
+              throw new GraphQLError('ToDo not found', {
+                extensions: { code: 'NOT_FOUND' },
+              });
+            await todo.update(updates);
+            return todo;
+        },
+        deleteToDo: async (_, { id }) => {
+            const todo = await ToDoItem.findByPk(id);
+            if (!todo) return false;
+            await todo.destroy();
+            return true;
+        },
+    },
+    
     ToDoItem: {
         user: async (parent) => {
             if (!parent.userId) return null; // Handle null userId gracefully

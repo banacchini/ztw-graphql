@@ -1,0 +1,183 @@
+// users:
+
+query {
+  users {
+    id
+    name
+    email
+    login
+    todos {
+      title
+      completed
+    }
+  }
+}
+
+// user with id=1:
+
+query {
+  user(id: 1) {
+    id
+    name
+    email
+    todos {
+      title
+      completed
+    }
+  }
+}
+
+// user that doesn't exist in db (returns null):
+
+query {
+  user(id: 9999) {
+    name
+  }
+}
+
+// all todos:
+
+query {
+  todos {
+    id
+    title
+    completed
+    user {
+      id
+      name
+    }
+  }
+}
+
+// todo with given id:
+
+query {
+  todo(id: 4) {
+    title
+    completed
+    user {
+      id
+      name
+	  login
+    }
+  }
+}
+
+// todo that doesn't exist in db (returns null):
+
+query {
+  todo(id: 9999) {
+    title
+  }
+}
+
+// add new user
+
+mutation {
+  createUser(name: "Ferb", email: "ferb@example.com", login: "ferb") {
+    id
+    name
+    email
+    login
+  }
+}
+
+// add new todo:
+
+mutation {
+  createToDo(title: "build something", completed: false, userId: 11) {
+    id
+    title
+    completed
+    user {
+      id
+      name
+    }
+  }
+}
+
+// add new todo with not existing user (error: user not found):
+
+mutation {
+  createToDo(title: "oops", completed: false, userId: 9999) {
+    id
+  }
+}
+
+// change user data:
+
+mutation {
+  updateUser(id: 1, name: "Zbyszko z Bogdańca", login: "zbyszko") {
+    id
+    name
+    login
+  }
+}
+
+// change not exisitng user data (error: user not found):
+
+mutation {
+  updateUser(id: 9999, name: "Ghost") {
+    id
+  }
+}
+
+
+// change todo data:
+
+mutation {
+  updateToDo(id: 1, completed: true) {
+    id
+    title
+    completed
+  }
+}
+
+mutation {
+  updateToDo(id: 1, title: "New title todo", completed: true) {
+    id
+    title
+    completed
+  }
+}
+
+// change not existing todo data (error: todo not found):
+
+mutation {
+  updateToDo(id: 9999, title: "oops") {
+    id
+  }
+}
+
+// change todo data (incorrect input):
+
+mutation {
+  createToDo(title: "Błąd typów", completed: "yes", userId: 1) {
+    id
+  }
+}
+
+// delete not existing user (returns false):
+
+mutation {
+  deleteUser(id: 9999)
+}
+
+// delete user (returns true):
+
+mutation {
+  deleteUser(id: 3)
+}
+
+// delete todo (returns true):
+
+mutation {
+  deleteToDo(id: 202)
+}
+
+// delete not existing todo (returns false):
+
+mutation {
+  deleteToDo(id: 9999)
+}
+
