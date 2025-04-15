@@ -24,7 +24,11 @@ const ToDoItem = sequelize.define('ToDoItem', {
 });
 
 // Define relationships
-User.hasMany(ToDoItem, { foreignKey: 'userId' });
+User.hasMany(ToDoItem, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+    hooks: true, 
+});
 ToDoItem.belongsTo(User, { foreignKey: 'userId' });
 
 module.exports = { sequelize, User, ToDoItem };
