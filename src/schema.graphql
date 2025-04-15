@@ -19,8 +19,6 @@ type Query {
     todo(id: ID!): ToDoItem
     users: [User!]
     user(id: ID!): User
-    paginatedUsers(limit: Int, offset: Int): [User!]
-    paginatedTodos(limit: Int, offset: Int): [ToDoItem!]
 }
 
 type Mutation {

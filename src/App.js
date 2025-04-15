@@ -12,13 +12,7 @@ const typeDefs = parse(readFileSync('./src/schema.graphql', 'utf-8'));
 const resolvers = {
     Query: {
         users: async () => await User.findAll(),
-        paginatedUsers: async (_, { limit, offset }) => {
-            return await User.findAll({ limit, offset });
-        },
         todos: async () => await ToDoItem.findAll(),
-        paginatedToodos: async (_, { limit, offset }) => {
-            return await ToDoItem.findAll({ limit, offset });
-        }
         todo: async (parent, { id }) => await ToDoItem.findByPk(id),
         user: async (parent, { id }) => await User.findByPk(id),
     },
